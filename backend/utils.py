@@ -145,6 +145,7 @@ def process_upload_file(request):
     ori_file_name = secure_filename(f.filename)
     _, ext = os.path.splitext(ori_file_name)
 
+    filename, filepath = None, None
     filetype = file_type(ori_file_name)
 
     if filetype == 'image':
@@ -158,5 +159,13 @@ def process_upload_file(request):
         np_img = np.fromstring(data, np.uint8)
         img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
         cv2.imwrite(filepath, img)
+    elif filetype == 'video':
+        # For completeness, store videos in VIDEO_FOLDER
+        filepath = save_upload(f)
+        filename = os.path.basename(filepath)
+    else:
+        # Unsupported file type
+        filename = ori_file_name
+        filepath = None
     
     return filename, filepath, filetype

@@ -169,7 +169,12 @@ class DetectionPipeline(object):
         ).to(self.device)
 
         if input_args.weight:
-            state_dict = torch.load(input_args.weight)
+            # Allow loading full checkpoints produced by Ultralytics and map to the selected device
+            state_dict = torch.load(
+                input_args.weight,
+                weights_only=False,
+                map_location=self.device
+            )
             self.model = load_state_dict(self.model, state_dict,
                                          'model', is_detection=True)
 

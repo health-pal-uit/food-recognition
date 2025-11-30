@@ -122,7 +122,11 @@ class SegmentationPipeline(object):
             classnames=CLASSNAMES).to(self.device)
 
         if self.weights:
-            state_dict = torch.load(self.weights)
+            state_dict = torch.load(
+                self.weights,
+                weights_only=False,
+                map_location=self.device
+            )
             self.model = load_state_dict(self.model, state_dict, 'model')
 
     def infocheck(self):
