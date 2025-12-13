@@ -1,5 +1,5 @@
 from flask_cors import cross_origin
-from flask import request, render_template, redirect, make_response
+from flask import jsonify, request, render_template, redirect, make_response
 
 from .utils import process_webcam_capture, process_url_input, process_image_file, process_output_file, process_upload_file
 
@@ -22,46 +22,106 @@ def set_routes(app):
         return render_template("webcam-capture.html")
 
 
-    @app.route('/analyze', methods=['POST', 'GET'])
-    @cross_origin(supports_credentials=True)
+    # @app.route('/analyze', methods=['POST', 'GET'])
+    # @cross_origin(supports_credentials=True)
+    # def analyze():
+    #     if request.method == 'POST':
+    #         out_name, filepath, filename, filetype, csv_name1, csv_name2 = None, None, None, None, None, None
+
+    #         if 'webcam-button' in request.form:
+    #             filename, filepath, filetype = process_webcam_capture(request)
+
+    #         elif 'url-button' in request.form:
+    #             filename, filepath, filetype = process_url_input(request)
+
+    #         elif 'upload-button' in request.form:
+    #             filename, filepath, filetype = process_upload_file(request)
+
+    #         # Get all inputs in form
+    #         min_iou = float(request.form.get('threshold-range')) / 100
+    #         min_conf = float(request.form.get('confidence-range')) / 100
+    #         model_types = request.form.get('model-types').lower()
+    #         enhanced = request.form.get('enhanced') == 'on'
+    #         ensemble = request.form.get('ensemble') == 'on'
+    #         tta = request.form.get('tta') == 'on'
+    #         segmentation = request.form.get('seg') == 'on'
+
+    #         if filetype == 'image':
+    #             out_name, output_path, output_type = process_image_file(filename, filepath, model_types, tta, ensemble, min_conf, min_iou, enhanced, segmentation)
+    #         else:
+    #             return render_template('detect-input-url.html', error_msg="Invalid input url!!!")
+
+    #         filename, csv_name1, csv_name2 = process_output_file(output_path)
+
+    #         if 'url-button' in request.form:
+    #             return render_template('detect-input-url.html', out_name=out_name, segname=output_path, fname=filename, output_type=output_type, filetype=filetype, csv_name=csv_name1, csv_name2=csv_name2)
+
+    #         elif 'webcam-button' in request.form:
+    #             return render_template('detect-webcam-capture.html', out_name=out_name, segname=output_path, fname=filename, output_type=output_type, filetype=filetype, csv_name=csv_name1, csv_name2=csv_name2)
+
+    #         return render_template('detect-upload-file.html', out_name=out_name, segname=output_path, fname=filename, output_type=output_type, filetype=filetype, csv_name=csv_name1, csv_name2=csv_name2)
+
+    #     return redirect('/')
+
+    @app.route('/analyze', methods=['POST'])
+    @cross_origin()
     def analyze():
-        if request.method == 'POST':
-            out_name, filepath, filename, filetype, csv_name1, csv_name2 = None, None, None, None, None, None
+        if 'file' not in request.files:
+            return jsonify({"error": "file missing"}), 400
+        f = request.files['file']
+        filename, filepath, filetype = process_upload_file(request)  # reuses existing helper
+        min_iou = 0.5
+        min_conf = 0.1
+        model_types = 'yolov8s'
+        tta = ensemble = enhanced = segmentation = False
 
-            if 'webcam-button' in request.form:
-                filename, filepath, filetype = process_webcam_capture(request)
+        _, _, _, result = process_image_file(
+            filename, filepath, model_types, tta, ensemble, min_conf, min_iou, enhanced, segmentation
+        )
 
-            elif 'url-button' in request.form:
-                filename, filepath, filetype = process_url_input(request)
+        boxes = result["boxes"]
+        if hasattr(boxes, "tolist"):
+            boxes = boxes.tolist()
 
-            elif 'upload-button' in request.form:
-                filename, filepath, filetype = process_upload_file(request)
+        scores = result["scores"]
+        if hasattr(scores, "tolist"):
+            scores = scores.tolist()
 
-            # Get all inputs in form
-            min_iou = float(request.form.get('threshold-range')) / 100
-            min_conf = float(request.form.get('confidence-range')) / 100
-            model_types = request.form.get('model-types').lower()
-            enhanced = request.form.get('enhanced') == 'on'
-            ensemble = request.form.get('ensemble') == 'on'
-            tta = request.form.get('tta') == 'on'
-            segmentation = request.form.get('seg') == 'on'
+        labels = result["names"]  # already list/strings
 
-            if filetype == 'image':
-                out_name, output_path, output_type = process_image_file(filename, filepath, model_types, tta, ensemble, min_conf, min_iou, enhanced, segmentation)
-            else:
-                return render_template('detect-input-url.html', error_msg="Invalid input url!!!")
+        calories = result.get("calories")
+        if hasattr(calories, "tolist"):
+            calories = calories.tolist()
 
-            filename, csv_name1, csv_name2 = process_output_file(output_path)
+        protein = result.get("protein")
+        if hasattr(protein, "tolist"):
+            protein = protein.tolist()
 
-            if 'url-button' in request.form:
-                return render_template('detect-input-url.html', out_name=out_name, segname=output_path, fname=filename, output_type=output_type, filetype=filetype, csv_name=csv_name1, csv_name2=csv_name2)
+        fat = result.get("fat")
+        if hasattr(fat, "tolist"):
+            fat = fat.tolist()
 
-            elif 'webcam-button' in request.form:
-                return render_template('detect-webcam-capture.html', out_name=out_name, segname=output_path, fname=filename, output_type=output_type, filetype=filetype, csv_name=csv_name1, csv_name2=csv_name2)
+        carbs = result.get("carbs")
+        if hasattr(carbs, "tolist"):
+            carbs = carbs.tolist()
 
-            return render_template('detect-upload-file.html', out_name=out_name, segname=output_path, fname=filename, output_type=output_type, filetype=filetype, csv_name=csv_name1, csv_name2=csv_name2)
+        fiber = result.get("fiber")
+        if hasattr(fiber, "tolist"):
+            fiber = fiber.tolist()
 
-        return redirect('/')
+        return jsonify({
+            "labels": labels,
+            "scores": scores,
+            "boxes": boxes,
+            "nutrition": {
+                "calories": calories,
+                "protein": protein,
+                "fat": fat,
+                "carbs": carbs,
+                "fiber": fiber,
+            }
+        })
+
 
 
     @app.after_request

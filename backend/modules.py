@@ -364,7 +364,7 @@ def get_prediction(
         output_path = os.path.join(
             output_path[0], output_path[1], output_path[2])
 
-        return output_path, 'semantic'
+        return output_path, 'semantic', result_dict
 
     # get hashed key from image path
     ori_hashed_key = os.path.splitext(os.path.basename(input_path))[0]
@@ -428,4 +428,4 @@ def get_prediction(
     df.set_index('names').T.to_csv(os.path.join(
         CSV_FOLDER, ori_hashed_key+'_info2.csv'))
 
-    return output_path, 'detection'
+    return output_path, 'detection', result_dict

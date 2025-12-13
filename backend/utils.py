@@ -115,7 +115,7 @@ def process_image_file(filename, filepath, model_types, tta, ensemble, min_conf,
         DETECTION_FOLDER, filename) if not segmentation else os.path.join(
         SEGMENTATION_FOLDER, filename)
 
-    output_path, output_type = get_prediction(
+    output_path, output_type, result_dict = get_prediction(
         filepath,
         output_path,
         model_name=model_types,
@@ -126,7 +126,7 @@ def process_image_file(filename, filepath, model_types, tta, ensemble, min_conf,
         enhance_labels=enhanced,
         segmentation=segmentation)
     
-    return out_name, output_path, output_type
+    return out_name, output_path, output_type, result_dict
 
 def process_output_file(output_path):
     filename = os.path.basename(output_path)
