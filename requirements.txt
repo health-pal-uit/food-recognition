@@ -5,6 +5,7 @@
 # Web framework (from PyPI)
 gunicorn==20.1.0
 flask-cors==6.0.2
+requests
 
 # Core ML/CV packages (CPU-only from PyTorch repo)
 torch==2.2.2+cpu
@@ -34,7 +35,7 @@ cryptography
 # tensorboard  # Heavy! ~200MB+ with dependencies
 # ensemble-boxes
 # pycocotools
-# gdown>=4.4.0
+gdown>=4.4.0
 # pyngrok
 
 # ===== HEAVY PACKAGES - ONLY INCLUDE IF ABSOLUTELY NECESSARY =====

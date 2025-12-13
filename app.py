@@ -5,7 +5,6 @@ import getpass
 
 from flask_cors import CORS
 from flask import Flask
-from pyngrok import ngrok, conf
 
 from backend.routes import set_routes
 from backend.constants import UPLOAD_FOLDER, CSV_FOLDER, DETECTION_FOLDER, SEGMENTATION_FOLDER, METADATA_FOLDER
@@ -30,12 +29,18 @@ if __name__ == '__main__':
     app.config['SEGMENTATION_FOLDER'] = SEGMENTATION_FOLDER
 
     if args.ngrok:
-        print("Enter your authtoken, which can be copied from https://dashboard.ngrok.com/get-started/your-authtoken")
-        conf.get_default().auth_token = getpass.getpass()
-        public_url = ngrok.connect(args.port).public_url
-        print(
-            f" * ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{args.port}/\"")
-        app.config['BASE_URL'] = public_url
+        try:
+            from pyngrok import ngrok, conf
+            print("Enter your authtoken, which can be copied from https://dashboard.ngrok.com/get-started/your-authtoken")
+            conf.get_default().auth_token = getpass.getpass()
+            public_url = ngrok.connect(args.port).public_url
+            print(
+                f" * ngrok tunnel \"{public_url}\" -> \"http://127.0.0.1:{args.port}/\"")
+            app.config['BASE_URL'] = public_url
+        except ImportError:
+            print("Warning: pyngrok not installed. Install with: pip install pyngrok")
+            print("Running without ngrok tunnel...")
+            app.config['BASE_URL'] = f"http://{args.host}:{args.port}"
     else:
         app.config['BASE_URL'] = f"http://{args.host}:{args.port}"
 
