@@ -1,0 +1,46 @@
+# Exclude unnecessary files from Heroku slug
+*.md
+README*
+LICENSE*
+.git
+.gitignore
+.gitattributes
+
+# Python cache
+*.pyc
+*.pyo
+__pycache__/
+*.so
+*.egg-info/
+.pytest_cache/
+
+# Documentation and examples
+docs/
+examples/
+tests/
+test/
+*.ipynb
+notebooks/
+
+# Development files
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+
+# Model weights (load these from cloud storage instead)
+*.pth
+*.pt
+*.onnx
+*.h5
+*.pb
+weights/
+models/
+checkpoints/
+
+# Data files
+data/
+datasets/
+*.csv
+*.json
+*.xml

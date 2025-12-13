@@ -1,21 +1,51 @@
+# Heroku-optimized requirements - Target: <500MB slug size
+# Use CPU-only PyTorch to save ~3.5GB
+--index-url https://download.pytorch.org/whl/cpu
+
+# Web framework
 gunicorn==20.1.0
-albumentations==1.1.0
-pyyaml>=5.1
-webcolors
-tensorboard
-tqdm
-ensemble-boxes
-timm>=0.5.4
-omegaconf
-pycocotools
-gdown>=4.4.0
-flask-cors
-pyngrok
-cryptography
-tabulate
-segmentation-models-pytorch
+flask-cors==6.0.2
+
+# Core ML/CV packages
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
 opencv-python-headless==4.7.0.72
-ultralytics
-numba>=0.49.0 # not directly required, pinned by Snyk to avoid a vulnerability
-rsa>=4.7 # not directly required, pinned by Snyk to avoid a vulnerability
 numpy==1.26.4
+pillow
+
+# Data augmentation (lightweight)
+albumentations==1.1.0
+
+# Utilities
+pyyaml>=5.1
+tqdm
+tabulate
+omegaconf
+
+# Security patches
+numba>=0.49.0
+rsa>=4.7
+cryptography
+
+# ===== OPTIONAL: Comment out if not needed =====
+# Remove these if you don't use them to reduce slug size:
+
+# webcolors
+# tensorboard  # Heavy! ~200MB+ with dependencies
+# ensemble-boxes
+# pycocotools
+gdown>=4.4.0
+# pyngrok
+
+# ===== HEAVY PACKAGES - ONLY INCLUDE IF ABSOLUTELY NECESSARY =====
+# These packages are VERY large. Only uncomment if you actually use them:
+
+# timm>=0.5.4  # ~500MB+ with all models
+# segmentation-models-pytorch  # ~100MB+
+# ultralytics  # ~300MB+ (YOLOv8)
+
+# If you need ultralytics, consider using their API instead:
+# https://docs.ultralytics.com/hub/
+
+# If you need timm models, load only specific models from HuggingFace Hub
+# If you need segmentation models, use individual model files instead

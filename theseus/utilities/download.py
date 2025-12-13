@@ -1,16 +1,38 @@
+import os
 import gdown
 
 
 def download_from_drive(id_or_url, output, md5=None, quiet=False, cache=True):
+    """Download models from Google Drive with caching support.
+    
+    For Heroku deployment:
+    - Models are stored in cloud (Google Drive)
+    - First request downloads to /tmp (ephemeral storage)
+    - Subsequent requests reuse cached model if available
+    - /tmp is cleared on dyno restart (models re-download as needed)
+    """
     if id_or_url.startswith('http') or id_or_url.startswith('https'):
         url = id_or_url
     else:
         url = 'https://drive.google.com/uc?id={}'.format(id_or_url)
 
+    # Ensure output directory exists
+    if output:
+        os.makedirs(os.path.dirname(output), exist_ok=True)
+        
+        # Check if model already exists in cache
+        if os.path.exists(output):
+            if not quiet:
+                print(f"Using cached model: {output}")
+            return output
+    
     if not cache:
         return gdown.download(url, output, quiet=quiet)
     else:
-        return gdown.cached_download(url, md5=md5, quiet=quiet)
+        if output:
+            return gdown.download(url, output, quiet=quiet)
+        else:
+            return gdown.cached_download(url, md5=md5, quiet=quiet)
 
 weight_urls = {
     'yolov8s': "1f2kOOyCQ8aHzSHPH8jf9Z6cT4ai-yqmx",
