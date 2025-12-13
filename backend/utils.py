@@ -4,12 +4,9 @@ import time
 
 import cv2
 import numpy as np
-import requests
-from PIL import Image
 from werkzeug.utils import secure_filename
 
-from .constants import UPLOAD_FOLDER, VIDEO_FOLDER, DETECTION_FOLDER, CSV_FOLDER, SEGMENTATION_FOLDER, IMAGE_ALLOWED_EXTENSIONS, VIDEO_ALLOWED_EXTENSIONS
-from .modules import get_prediction
+from .constants import UPLOAD_FOLDER, VIDEO_FOLDER, IMAGE_ALLOWED_EXTENSIONS, VIDEO_ALLOWED_EXTENSIONS
 
 
 def allowed_file_image(filename):

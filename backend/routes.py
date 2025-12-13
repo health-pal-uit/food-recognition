@@ -1,82 +1,45 @@
 from flask_cors import cross_origin
-from flask import jsonify, request, render_template, redirect, make_response
+from flask import jsonify, request
+import os
 
-from .utils import process_webcam_capture, process_url_input, process_image_file, process_output_file, process_upload_file
+from .utils import process_upload_file
+from .modules_minimal import get_prediction
+from .constants import DETECTION_FOLDER
 
 
 def set_routes(app):
     @app.route('/')
     def homepage():
-        resp = make_response(render_template("upload-file.html"))
-        resp.headers['Access-Control-Allow-Origin'] = '*'
-        return resp
-
-
-    @app.route('/url')
-    def detect_by_url_page():
-        return render_template("input-url.html")
-
-
-    @app.route('/webcam')
-    def detect_by_webcam_page():
-        return render_template("webcam-capture.html")
-
-
-    # @app.route('/analyze', methods=['POST', 'GET'])
-    # @cross_origin(supports_credentials=True)
-    # def analyze():
-    #     if request.method == 'POST':
-    #         out_name, filepath, filename, filetype, csv_name1, csv_name2 = None, None, None, None, None, None
-
-    #         if 'webcam-button' in request.form:
-    #             filename, filepath, filetype = process_webcam_capture(request)
-
-    #         elif 'url-button' in request.form:
-    #             filename, filepath, filetype = process_url_input(request)
-
-    #         elif 'upload-button' in request.form:
-    #             filename, filepath, filetype = process_upload_file(request)
-
-    #         # Get all inputs in form
-    #         min_iou = float(request.form.get('threshold-range')) / 100
-    #         min_conf = float(request.form.get('confidence-range')) / 100
-    #         model_types = request.form.get('model-types').lower()
-    #         enhanced = request.form.get('enhanced') == 'on'
-    #         ensemble = request.form.get('ensemble') == 'on'
-    #         tta = request.form.get('tta') == 'on'
-    #         segmentation = request.form.get('seg') == 'on'
-
-    #         if filetype == 'image':
-    #             out_name, output_path, output_type = process_image_file(filename, filepath, model_types, tta, ensemble, min_conf, min_iou, enhanced, segmentation)
-    #         else:
-    #             return render_template('detect-input-url.html', error_msg="Invalid input url!!!")
-
-    #         filename, csv_name1, csv_name2 = process_output_file(output_path)
-
-    #         if 'url-button' in request.form:
-    #             return render_template('detect-input-url.html', out_name=out_name, segname=output_path, fname=filename, output_type=output_type, filetype=filetype, csv_name=csv_name1, csv_name2=csv_name2)
-
-    #         elif 'webcam-button' in request.form:
-    #             return render_template('detect-webcam-capture.html', out_name=out_name, segname=output_path, fname=filename, output_type=output_type, filetype=filetype, csv_name=csv_name1, csv_name2=csv_name2)
-
-    #         return render_template('detect-upload-file.html', out_name=out_name, segname=output_path, fname=filename, output_type=output_type, filetype=filetype, csv_name=csv_name1, csv_name2=csv_name2)
-
-    #     return redirect('/')
+        return jsonify({
+            "message": "Food Recognition API - YOLOv8",
+            "endpoint": "/analyze",
+            "method": "POST",
+            "parameters": "file (multipart/form-data)"
+        })
 
     @app.route('/analyze', methods=['POST'])
     @cross_origin()
     def analyze():
         if 'file' not in request.files:
-            return jsonify({"error": "file missing"}), 400
-        f = request.files['file']
-        filename, filepath, filetype = process_upload_file(request)  # reuses existing helper
-        min_iou = 0.5
-        min_conf = 0.1
-        model_types = 'yolov8s'
-        tta = ensemble = enhanced = segmentation = False
-
-        _, _, _, result = process_image_file(
-            filename, filepath, model_types, tta, ensemble, min_conf, min_iou, enhanced, segmentation
+            return jsonify({"error": "No file provided"}), 400
+        
+        # Process uploaded file
+        filename, filepath, filetype = process_upload_file(request)
+        
+        if filetype != 'image':
+            return jsonify({"error": "Only image files are supported"}), 400
+        
+        # Set output path
+        output_filename = filename
+        output_path = os.path.join(DETECTION_FOLDER, output_filename)
+        
+        # Run YOLOv8 detection
+        _, _, result = get_prediction(
+            input_path=filepath,
+            output_path=output_path,
+            model_name='yolov8s',
+            min_iou=0.5,
+            min_conf=0.1
         )
 
         boxes = result["boxes"]
